@@ -14,7 +14,8 @@ from heapq import heappush, heappop
 input_file = 'input.txt'
 
 
-class P = 0
+class Process:
+    last_scheduled_time = 0
 
     def __init__(self, id, arrive_time, burst_time):
         self.id = id
@@ -92,7 +93,7 @@ def SRTF_scheduling(process_list):
         while (current_time > (start_time + current_process.remain_time)):
             start_time = start_time+current_process.remain_time
             if(len(queue)>0):
-               temp, current_process = heappop(queue) 
+               remain, current_process = heappop(queue) 
                schedule.append((start_time, current_process.id))
                waiting_time = waiting_time + start_time - current_process.last_time
             else:
@@ -126,7 +127,42 @@ def SRTF_scheduling(process_list):
 
 
 def SJF_scheduling(process_list, alpha):
-    return (["to be completed, scheduling SJF without using information from process.burst_time"], 0.0)
+    schedule = []
+    current_time = 0
+    waiting_time = 0
+    length = len(process_list)
+    remain_process = [True] * length
+    id_list = []
+
+    for process in process_list:
+        id_list.append(process.id)
+    predict = { i : 5 for i in set(id_list) }
+
+    for count in range(length):
+        for i in range(length):
+            if remain_process[i] <= current_time and process_list[i].arrive_time <=current_time:
+                candidate = [i]
+            if not len(candidate):
+                current_time =process_list[count].arrive_time
+                for i in range(length):
+                    if remain_process[i] and process_list[i].arrive_time <=current_time:
+                        candidate = [i]
+
+        index, _ = min(((i, predict[process_list[i].id]) for i in candidate),
+                       key=lambda x: x[1])
+
+        process = process_list[index]
+        if current_time < process.arrive_time:
+            current_time = process.arrive_time
+        schedule.append((current_time, process.id))
+        waiting_time = waiting_time + (current_time - process.arrive_time)
+        current_time = current_time + process.burst_time
+
+        predict[process.id] = alpha * process.burst_time + (1 - alpha) * predict[process.id]
+        remain_process[index] = False
+
+    average_waiting_time = waiting_time / float(length)
+    return schedule, average_waiting_time
 
 
 def read_input():
