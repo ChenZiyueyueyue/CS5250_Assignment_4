@@ -10,17 +10,18 @@ Output files:
     SJF.txt
 '''
 import sys
-
+from heapq import heappush, heappop
 input_file = 'input.txt'
 
 
-class Process:
-    last_scheduled_time = 0
+class P = 0
 
     def __init__(self, id, arrive_time, burst_time):
         self.id = id
         self.arrive_time = arrive_time
         self.burst_time = burst_time
+        self.remain_time =burst_time
+        self.last_time = arrive_time
     # for printing purpose
 
     def __repr__(self):
@@ -79,7 +80,49 @@ def RR_scheduling(process_list, time_quantum):
 
 
 def SRTF_scheduling(process_list):
-    return (["to be completed, scheduling process_list on SRTF, using process.burst_time to calculate the remaining time of the current process "], 0.0)
+    current_time = 0
+    waiting_time = 0
+    schedule = []
+    queue = []
+    current_process = process_list[0]
+    schedule.append((current_process.arrive_time, current_process.id))
+    for process in process_list[1:]:
+        start_time = current_process.last_time
+        current_time = process.arrive_time
+        while (current_time > (start_time + current_process.remain_time)):
+            start_time = start_time+current_process.remain_time
+            if(len(queue)>0):
+               temp, current_process = heappop(queue) 
+               schedule.append((start_time, current_process.id))
+               waiting_time = waiting_time + start_time - current_process.last_time
+            else:
+                current_process = None
+                break
+        if current_process != None:
+            current_process.remain_time = current_process.remain_time -(current_time - start_time)
+            waiting_time = waiting_time + start_time - current_process.last_time
+            if current_process.remain_time <= process.last_time:
+                heappush(queue, (process.remain_time, process))
+                current_process.last_time = current_time
+            else:
+                current_process.last_time = current_time
+                heappush(queue, (current_process.remain_time, current_process))
+                current_process = process
+                schedule.append((current_time, current_process.id))
+        else:
+            #start next job
+            current_process = process
+            schedule.append((current_time, current_process.id))
+    while (len(queue) > 0):
+        # finish all jobs in the queue
+        start_time = current_time+current_process.remain_time
+        remain, current_process = heappop(queue)
+        schedule.append((start_time, current_process.id))
+        waiting_time += start_time - current_process.last_time
+        current_time = start_time
+
+    average_waiting_time = waiting_time/float(len(process_list))
+    return schedule, average_waiting_time
 
 
 def SJF_scheduling(process_list, alpha):
