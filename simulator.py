@@ -11,6 +11,7 @@ Output files:
 '''
 import sys
 from heapq import heappush, heappop
+from copy import deepcopy
 input_file = 'input.txt'
 
 
@@ -49,7 +50,7 @@ def FCFS_scheduling(process_list):
 
 
 def RR_scheduling(process_list, time_quantum):
-    RR_process_list = process_list.copy()
+    RR_process_list = deepcopy(process_list)
     schedule = []
     current_time = 0
     waiting_time = 0
