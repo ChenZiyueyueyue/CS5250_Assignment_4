@@ -22,8 +22,8 @@ class Process:
         self.id = id
         self.arrive_time = arrive_time
         self.burst_time = burst_time
-        self.remain_time =burst_time
-        self.last_time = arrive_time
+        #self.remain_time =burst_time
+        #self.last_time = arrive_time
     # for printing purpose
 
     def __repr__(self):
@@ -85,48 +85,56 @@ def RR_scheduling(process_list, time_quantum):
 
 
 def SRTF_scheduling(process_list):
+    schedule = []
     current_time = 0
     waiting_time = 0
-    schedule = []
-    queue = []
-    current_process = process_list[0]
-    schedule.append((current_process.arrive_time, current_process.id))
-    for process in process_list[1:]:
-        start_time = current_process.last_time
-        current_time = process.arrive_time
-        while (current_time > (start_time + current_process.remain_time)):
-            start_time = start_time+current_process.remain_time
-            if(len(queue)>0):
-               remain, current_process = heappop(queue) 
-               schedule.append((start_time, current_process.id))
-               waiting_time = waiting_time + start_time - current_process.last_time
-            else:
-                current_process = None
-                break
-        if current_process != None:
-            current_process.remain_time = current_process.remain_time -(current_time - start_time)
-            waiting_time = waiting_time + start_time - current_process.last_time
-            if current_process.remain_time <= process.last_time:
-                heappush(queue, (process.remain_time, process))
-                current_process.last_time = current_time
-            else:
-                current_process.last_time = current_time
-                heappush(queue, (current_process.remain_time, current_process))
-                current_process = process
-                schedule.append((current_time, current_process.id))
-        else:
-            #start next job
-            current_process = process
-            schedule.append((current_time, current_process.id))
-    while (len(queue) > 0):
-        # finish all jobs in the queue
-        start_time = current_time+current_process.remain_time
-        remain, current_process = heappop(queue)
-        schedule.append((start_time, current_process.id))
-        waiting_time = waiting_time + (start_time - current_process.last_time)
-        current_time = start_time
+    length = len(process_list)
+    count = length
+    index = 0
+    remain_burst = []
 
-    average_waiting_time = waiting_time/float(len(process_list))
+    for process in process_list:
+        remain_burst.append(process.burst_time)
+    # print(remain_burst)
+
+    while count != 0:
+        candidate = []
+        for i in remain_burst[:index+1]:
+            if i != 0:
+                candidate.append(i)
+
+        if len(candidate) == 0:
+            index = index + 1
+            continue
+
+        index_list = remain_burst.index(min(candidate))
+        process = process_list[index_list]
+        # print(process)
+
+        if current_time < process.arrive_time:
+            current_time = process.arrive_time
+
+        if len(schedule) == 0 or schedule[-1][1] != process.id:
+            schedule.append((current_time, process.id))
+
+        duration = remain_burst[index_list]
+        # jumpt to next one
+        if index < length - 1:
+            next_candidate = process_list[index + 1]
+            duration = min(duration, next_candidate.arrive_time - current_time)
+
+            if current_time >= next_candidate.arrive_time:
+                index += 1
+
+        current_time = current_time + duration
+        remain_burst[index_list] = remain_burst[index_list] - duration
+
+        if not remain_burst[index_list]:
+            waiting_time = waiting_time + current_time - \
+                process.arrive_time - process.burst_time
+            count = count - 1
+
+    average_waiting_time = waiting_time / float(length)
     return schedule, average_waiting_time
 
 
