@@ -119,7 +119,7 @@ def SRTF_scheduling(process_list):
         start_time = current_time+current_process.remain_time
         remain, current_process = heappop(queue)
         schedule.append((start_time, current_process.id))
-        waiting_time += start_time - current_process.last_time
+        waiting_time = waiting_time + (start_time - current_process.last_time)
         current_time = start_time
 
     average_waiting_time = waiting_time/float(len(process_list))
