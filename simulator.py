@@ -56,7 +56,7 @@ def RR_scheduling(process_list, time_quantum):
     length = len(process_list)
 
     while len(RR_process_list) != 0:
-        check = 0
+        temp_indicator = 0
         for process in RR_process_list:
             if process.burst_time > 0:
                 if current_time >= process.arrive_time:
@@ -71,11 +71,14 @@ def RR_scheduling(process_list, time_quantum):
                         duration = process.burst_time
                     else:
                         duration = time_quantum
+                    temp_indicator = 1
                     current_time = current_time + duration
                     process.last_scheduled_time = current_time
                     process.burst_time = process.burst_time - duration
                     if process.burst_time <= 0:
                         RR_process_list.remove(process)
+        if temp_indicator == 0:
+            current_time = RR_process_list[0].arrive_time
         average_waiting_time = waiting_time/float(length)
     return schedule, average_waiting_time
 
