@@ -140,34 +140,40 @@ def SJF_scheduling(process_list, alpha):
 
     for process in process_list:
         id_list.append(process.id)
-    predict = { i : 5 for i in set(id_list) }
+    predict = {i: 5 for i in set(id_list)}
 
     for count in range(length):
+        candidate = []
         for i in range(length):
-            if remain_process[i] <= current_time and process_list[i].arrive_time <=current_time:
-                candidate = [i]
-            if not len(candidate):
-                current_time =process_list[count].arrive_time
-                for i in range(length):
-                    if remain_process[i] and process_list[i].arrive_time <=current_time:
-                        candidate = [i]
+            if remain_process[i] and process_list[i].arrive_time <= current_time:
+                candidate.append(i)
+        #print(1, candidate)
+        # check empty
+        if not len(candidate):
+            current_time = process_list[count].arrive_time
+            for i in range(length):
+                if remain_process[i] and process_list[i].arrive_time <= current_time:
+                    candidate.append(i)
+        #print(2, candidate)
+        temp = []
+        for i in candidate:
+            temp.append((i, predict[process_list[i].id]))
+        # find the index id that will be used to schedule
+        index_id, _ = min(temp, key=lambda x: x[1])
 
-        index, _ = min(((i, predict[process_list[i].id]) for i in candidate),
-                       key=lambda x: x[1])
-
-        process = process_list[index]
+        process = process_list[index_id]
         if current_time < process.arrive_time:
             current_time = process.arrive_time
         schedule.append((current_time, process.id))
         waiting_time = waiting_time + (current_time - process.arrive_time)
         current_time = current_time + process.burst_time
 
-        predict[process.id] = alpha * process.burst_time + (1 - alpha) * predict[process.id]
-        remain_process[index] = False
+        predict[process.id] = alpha * process.burst_time + \
+            (1 - alpha) * predict[process.id]
+        remain_process[index_id] = False
 
     average_waiting_time = waiting_time / float(length)
     return schedule, average_waiting_time
-
 
 def read_input():
     result = []
